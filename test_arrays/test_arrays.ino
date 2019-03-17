@@ -10,10 +10,18 @@ Encoder myEnc(22, 23);
 unsigned long oldPosition = 0;
 unsigned long newPosition;
 
+//distance
+unsigned long dMax = 50000;
+unsigned long dA;
+unsigned long dC;
+
 //speed
 int velocity = 40; //start speed
-int spOld = 0;
-int spMax = 101;
+float vMin = 3000;
+float vMax;        
+float vAvg;
+float spOld = 0;
+float spMax = 101;
 int spList[36] = {42,44,48,51,54,58,62,65,70,73,78,
                   82,85,88,92,96,100,104,108,111,115,
                   119,123,127,131,134,139,142,147,151,
@@ -26,8 +34,14 @@ struct speedData{
 
 struct speedData spd;
 
+int steps;
+
 //time
-int t = 1000; //constant (milli)
+int t = 1000;         //constant (milli)
+int a = 100;          //acceleration time
+float tA;               //time to max speed;
+float tC;               //time in C section probably will increase
+float tT;               //total time
 unsigned long tn = 0; //time now
 
 //indexes
@@ -136,17 +150,42 @@ void loop() {
     
   analogWrite(RPWM, 0);
  */
+
+ 
  
   //Serial.println(spOld);
   if (spOld != spMax){
     spOld = spMax;
     spd = speedSearch(spList, spMax);
+    steps = spd.spPos;
+
+    vMax = steps * 500 + vMin;
+    vAvg = (vMin + vMax) / 2;
+    tA = steps * a;       // time to maximum speed
+    dA = vAvg * tA / 1000;
+    dC = (int)(dMax - (2 * dA)); //dB = dA
+    tC = (int)(dC / vMax * 1000); // time in C distance
+    tT = (int)(2 * tA + tC);
   }
-  
+
   if (millis() == 5000){
     Serial.print("Speed: ");
     Serial.println(spd.sp);
-    Serial.print("Pos: ");
+    Serial.print("steps: ");
     Serial.println(spd.spPos);
+    Serial.print("vMax: ");
+    Serial.println(vMax);
+    Serial.print("vAvg: ");
+    Serial.println(vAvg);
+    Serial.print("tA: ");
+    Serial.println(tA);
+    Serial.print("dA: ");
+    Serial.println(dA);
+    Serial.print("dC: ");
+    Serial.println(dC);
+    Serial.print("tC: ");
+    Serial.println(tC);
+    Serial.print("tt: ");
+    Serial.println(tT);
   }
 }
