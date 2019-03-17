@@ -8,12 +8,12 @@ Encoder myEnc(22, 23);
 
 //position
 unsigned long oldPosition = 0;
-unsigned long newPosition;
+long newPosition;
 
 //distance
-unsigned long dMax = 250000;
-unsigned long dA;
-unsigned long dC;
+long dMax = 100000;
+long dA;
+long dC;
 
 //speed
 int velocity = 40; //start speed
@@ -21,11 +21,16 @@ float vMin = 3000;
 float vMax;        
 float vAvg;
 float spOld = 0;
-float spMax = 151;
-int spList[36] = {42,44,48,51,54,58,62,65,70,73,78,
+float spMax = 100;
+int spListRight[36] = {42,44,48,51,54,58,62,65,70,73,78,
                   82,85,88,92,96,100,104,108,111,115,
                   119,123,127,131,134,139,142,147,151,
                   154,160,164,167,171,174};
+
+int spListLeft[36] = {46,49,52,55,58,61,65,68,72,75,79,
+                      83,87,91,95,99,103,107,110,114,118,
+                      122,126,130,134,137,141,145,149,153,
+                      157,161,165,169,173,176};
 
 struct speedData{
   int sp;
@@ -117,67 +122,87 @@ struct speedData speedSearch(int speedList[], int speedMax){
 }
 
 void goRight(){
+
+  Serial.println("here");
   
   tStart = millis();
   tn = millis();
   i = 0;
-  analogWrite(RPWM, spList[i]);
+  analogWrite(RPWM, spListRight[i]);
+  newPosition = myEnc.read();
   
-  while (tn <= (tStart + tT)){
+  while ((tn <= (tStart + tT) && newPosition <= dMax)
+         || newPosition <= dMax){
+
+    newPosition = myEnc.read();
     
     if (tn <= (tStart + tA)){
       if (millis() > tn + a){
-        analogWrite(RPWM, spList[++i]);
+        analogWrite(RPWM, spListRight[++i]);
         tn = millis();
+        //Serial.print("Pos: ");
+        //Serial.println(newPosition);
       }
     }
     
     if ((tn > (tStart + tA))
         && (tn < (tStart + tA + tC))){
-        analogWrite(RPWM, spList[steps]);
         tn = millis();
     }
     
-    if (tn >= (tStart + tA + tC)){
+    if ((tn >= (tStart + tA + tC)) && (newPosition >= dMax - (dC + dA)) && i > 0){
       if (millis() > tn + a){
-        analogWrite(RPWM, spList[--i]);
+        analogWrite(RPWM, spListRight[--i]);
         tn = millis();
+        //Serial.print("Pos: ");
+        //Serial.println(newPosition);
       }
     }
   }
+  analogWrite(RPWM, 0);
+  //Serial.print("time: ");
+  //Serial.println(tn - tStart);
 }
 
 void goLeft(){
   
-  analogWrite(RPWM, 0);
-  
   tStart = millis();
   tn = millis();
   i = 0;
-  analogWrite(LPWM, spList[i]);
+  analogWrite(LPWM, spListLeft[i]);
+  newPosition = myEnc.read();
   
-  while (tn <= (tStart + tT)){
+  while ((tn <= (tStart + tT) && newPosition >= 0)
+          || newPosition >= 0){
+
+    newPosition = myEnc.read();
     
     if (tn <= (tStart + tA)){
       if (millis() > tn + a){
-        analogWrite(LPWM, spList[++i]);
+        analogWrite(LPWM, spListLeft[++i]);
         tn = millis();
+        //Serial.print("Pos: ");
+        //Serial.println(newPosition);
       }
     }
     
     if ((tn > (tStart + tA))
         && (tn < (tStart + tA + tC))){
-        analogWrite(LPWM, spList[steps]);
         tn = millis();
     }
     
-    if (tn >= (tStart + tA + tC)){
+    if ((tn >= (tStart + tA + tC)) && (newPosition <= dA) && i > 0){
       if (millis() > tn + a){
-        analogWrite(LPWM, spList[--i]);
+        analogWrite(LPWM, spListLeft[--i]);
         tn = millis();
+        //Serial.print("Pos: ");
+        //Serial.println(newPosition);
       }
     }
   }
+  analogWrite(LPWM, 0);
+  Serial.print("time: ");
+  Serial.println(tn - tStart);
 }
 
 void loop() {
@@ -185,7 +210,7 @@ void loop() {
 
   if (spOld != spMax){
     spOld = spMax;
-    spd = speedSearch(spList, spMax);
+    spd = speedSearch(spListRight, spMax);
     steps = spd.spPos;
 
     vMax = steps * 500 + vMin;
@@ -197,7 +222,7 @@ void loop() {
     tT = (int)(2 * tA + tC);
   }
  
-  if (tStart == 0){
+   if (tStart == 0){
     goRight();
     newPosition = myEnc.read();
     Serial.print("Pos: ");
@@ -207,8 +232,10 @@ void loop() {
     newPosition = myEnc.read();
     Serial.print("Pos: ");
     Serial.println(newPosition);
-  }
-  
+   
+   }
+
+  /*
   analogWrite(RPWM, 0);
   analogWrite(LPWM, 0);
 
@@ -247,4 +274,5 @@ void loop() {
     Serial.print("i: ");
     Serial.println(i);
   }
+  */
 }
