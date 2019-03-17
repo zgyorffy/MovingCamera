@@ -11,7 +11,7 @@ unsigned long oldPosition = 0;
 unsigned long newPosition;
 
 //distance
-unsigned long dMax = 50000;
+unsigned long dMax = 250000;
 unsigned long dA;
 unsigned long dC;
 
@@ -21,7 +21,7 @@ float vMin = 3000;
 float vMax;        
 float vAvg;
 float spOld = 0;
-float spMax = 101;
+float spMax = 151;
 int spList[36] = {42,44,48,51,54,58,62,65,70,73,78,
                   82,85,88,92,96,100,104,108,111,115,
                   119,123,127,131,134,139,142,147,151,
@@ -43,6 +43,7 @@ float tA;               //time to max speed;
 float tC;               //time in C section probably will increase
 float tT;               //total time
 unsigned long tn = 0; //time now
+unsigned long tStart = 0;
 
 //indexes
 int i = 0;
@@ -168,6 +169,9 @@ void loop() {
     tT = (int)(2 * tA + tC);
   }
 
+/*
+ 
+  
   if (millis() == 5000){
     Serial.print("Speed: ");
     Serial.println(spd.sp);
@@ -187,5 +191,74 @@ void loop() {
     Serial.println(tC);
     Serial.print("tt: ");
     Serial.println(tT);
+  }
+  
+ */
+ 
+  if (tStart == 0){
+    tStart = millis();
+    tn = millis();
+    i = 0;
+    analogWrite(RPWM, spList[i]);
+    
+    while (tn <= (tStart + tT)){
+      
+      if (tn <= (tStart + tA)){
+        if (millis() > tn + a){
+          analogWrite(RPWM, spList[++i]);
+          tn = millis();
+        }
+      }
+      
+      if ((tn > (tStart + tA))
+          && (tn < (tStart + tA + tC))){
+          analogWrite(RPWM, spList[steps]);
+          tn = millis();
+      }
+      
+      if (tn >= (tStart + tA + tC)){
+        if (millis() > tn + a){
+          analogWrite(RPWM, spList[--i]);
+          tn = millis();
+        }
+      }
+    }
+  }
+  
+  analogWrite(RPWM, 0);
+
+  newPosition = myEnc.read();
+  
+  if (newPosition / 100 != oldPosition / 100) {
+      oldPosition = newPosition;
+    Serial.print("Pos: ");
+    Serial.println(newPosition);
+    Serial.print("Start: ");
+    Serial.println(tStart);
+    Serial.print("End: ");
+    Serial.println(millis());
+    Serial.print("Duration: ");
+    Serial.println(millis() - tStart);
+    Serial.println("*************************"); 
+    Serial.print("Speed: ");
+    Serial.println(spd.sp);
+    Serial.print("steps: ");
+    Serial.println(spd.spPos);
+    Serial.print("vMax: ");
+    Serial.println(vMax);
+    Serial.print("vAvg: ");
+    Serial.println(vAvg);
+    Serial.print("tA: ");
+    Serial.println(tA);
+    Serial.print("dA: ");
+    Serial.println(dA);
+    Serial.print("dC: ");
+    Serial.println(dC);
+    Serial.print("tC: ");
+    Serial.println(tC);
+    Serial.print("tt: ");
+    Serial.println(tT);
+    Serial.print("i: ");
+    Serial.println(i);
   }
 }
