@@ -116,45 +116,73 @@ struct speedData speedSearch(int speedList[], int speedMax){
   }
 }
 
+void goRight(){
+  
+  tStart = millis();
+  tn = millis();
+  i = 0;
+  analogWrite(RPWM, spList[i]);
+  
+  while (tn <= (tStart + tT)){
+    
+    if (tn <= (tStart + tA)){
+      if (millis() > tn + a){
+        analogWrite(RPWM, spList[++i]);
+        tn = millis();
+      }
+    }
+    
+    if ((tn > (tStart + tA))
+        && (tn < (tStart + tA + tC))){
+        analogWrite(RPWM, spList[steps]);
+        tn = millis();
+    }
+    
+    if (tn >= (tStart + tA + tC)){
+      if (millis() > tn + a){
+        analogWrite(RPWM, spList[--i]);
+        tn = millis();
+      }
+    }
+  }
+}
+
+void goLeft(){
+  
+  analogWrite(RPWM, 0);
+  
+  tStart = millis();
+  tn = millis();
+  i = 0;
+  analogWrite(LPWM, spList[i]);
+  
+  while (tn <= (tStart + tT)){
+    
+    if (tn <= (tStart + tA)){
+      if (millis() > tn + a){
+        analogWrite(LPWM, spList[++i]);
+        tn = millis();
+      }
+    }
+    
+    if ((tn > (tStart + tA))
+        && (tn < (tStart + tA + tC))){
+        analogWrite(LPWM, spList[steps]);
+        tn = millis();
+    }
+    
+    if (tn >= (tStart + tA + tC)){
+      if (millis() > tn + a){
+        analogWrite(LPWM, spList[--i]);
+        tn = millis();
+      }
+    }
+  }
+}
+
 void loop() {
   // put your main code here, to run repeatedly:
 
-  /*
-  while (tn <= 100000) {
-    newPosition = myEnc.read();
-    if (millis() > tn + t) {
-      i += 1;
-      if (i == 5){
-        i = 0;
-        velocity += 1;
-        Serial.print("Speed: ");
-        Serial.println(velocity);
-        analogWrite(RPWM, velocity);
-      }
-      tn = millis();
-      //Serial.print("Time: ");
-      //Serial.println(tn/1000);
-      if (newPosition/100 != oldPosition/100) {
-         Serial.println(newPosition-oldPosition);
-         oldPosition = newPosition;
-         //Serial.print("Pos: ");
-         //Serial.println(newPosition);
-      } 
-    }
-  }
-
-  if (newPosition/100 != oldPosition/100) {
-      oldPosition = newPosition;
-      Serial.print("Pos: ");
-      Serial.println(newPosition);
-  }
-    
-  analogWrite(RPWM, 0);
- */
-
- 
- 
-  //Serial.println(spOld);
   if (spOld != spMax){
     spOld = spMax;
     spd = speedSearch(spList, spMax);
@@ -168,69 +196,27 @@ void loop() {
     tC = (int)(dC / vMax * 1000); // time in C distance
     tT = (int)(2 * tA + tC);
   }
-
-/*
- 
-  
-  if (millis() == 5000){
-    Serial.print("Speed: ");
-    Serial.println(spd.sp);
-    Serial.print("steps: ");
-    Serial.println(spd.spPos);
-    Serial.print("vMax: ");
-    Serial.println(vMax);
-    Serial.print("vAvg: ");
-    Serial.println(vAvg);
-    Serial.print("tA: ");
-    Serial.println(tA);
-    Serial.print("dA: ");
-    Serial.println(dA);
-    Serial.print("dC: ");
-    Serial.println(dC);
-    Serial.print("tC: ");
-    Serial.println(tC);
-    Serial.print("tt: ");
-    Serial.println(tT);
-  }
-  
- */
  
   if (tStart == 0){
-    tStart = millis();
-    tn = millis();
-    i = 0;
-    analogWrite(RPWM, spList[i]);
+    goRight();
+    newPosition = myEnc.read();
+    Serial.print("Pos: ");
+    Serial.println(newPosition);
     
-    while (tn <= (tStart + tT)){
-      
-      if (tn <= (tStart + tA)){
-        if (millis() > tn + a){
-          analogWrite(RPWM, spList[++i]);
-          tn = millis();
-        }
-      }
-      
-      if ((tn > (tStart + tA))
-          && (tn < (tStart + tA + tC))){
-          analogWrite(RPWM, spList[steps]);
-          tn = millis();
-      }
-      
-      if (tn >= (tStart + tA + tC)){
-        if (millis() > tn + a){
-          analogWrite(RPWM, spList[--i]);
-          tn = millis();
-        }
-      }
-    }
+    goLeft();
+    newPosition = myEnc.read();
+    Serial.print("Pos: ");
+    Serial.println(newPosition);
   }
   
   analogWrite(RPWM, 0);
+  analogWrite(LPWM, 0);
 
   newPosition = myEnc.read();
   
   if (newPosition / 100 != oldPosition / 100) {
-      oldPosition = newPosition;
+    oldPosition = newPosition;
+    Serial.println("*************************");
     Serial.print("Pos: ");
     Serial.println(newPosition);
     Serial.print("Start: ");
